@@ -334,3 +334,139 @@ LEFT JOIN Courses as C on T.teacher_id = C.teacher_id;
 
 
 
+-- ======================================================================================
+
+
+-- TASK 4
+
+
+
+-- TAKS 4.1
+
+SELECT C.course_id, c.course_name , AVG(Enrollments) as Average
+FROM Courses C
+JOIN (SELECT course_id, count(student_id) as Enrollments
+	   FROM Enrollments 
+	   GROUP BY course_id) 
+e on C.course_id = e.course_id
+GROUP BY C.course_id, C.course_name;
+
+
+-- TAKS 4.2
+SELECT S.student_id, S.first_name, S.last_name,P.amount
+FROM Students as S
+JOIN Payments as P USING(student_id)
+WHERE P.amount = (SELECT MAX(amount) as payment
+				  FROM Payments );
+
+
+
+-- TAKS 4.3
+
+SELECT C.course_id, C.course_name, COUNT(E.student_id) AS enrollment_count
+FROM Courses as C
+LEFT JOIN 
+Enrollments as E ON C.course_id = E.course_id
+GROUP BY C.course_id,C.course_name
+HAVING COUNT(E.student_id) = (SELECT MAX(enrollment_count)
+                           FROM (SELECT COUNT(student_id) AS enrollment_count
+                                 FROM enrollments
+                                 GROUP BY course_id) AS subquery);
+
+
+
+-- TASK 4.4
+
+SELECT T.teacher_id, T.first_name,T.last_name,
+    (SELECT SUM(p.amount)
+     FROM Payments as P
+     JOIN Courses as C ON C.course_id = C.course_id
+     WHERE C.teacher_id = T.teacher_id) AS total
+FROM Teachers as T;
+
+
+
+-- TASK 4.5
+
+SELECT S.student_id,S.first_name
+FROM Students as S
+WHERE 
+    (SELECT COUNT(*) FROM Enrollments as E WHERE E.student_id = S.student_id) = 
+    (SELECT COUNT(*) FROM Courses);
+    
+    
+
+-- TASK 4.6
+
+SELECT T.teacher_id, T.first_name
+FROM Teachers as T
+WHERE T.teacher_id NOT IN (SELECT C.Teacher_id FROM Courses as C);
+
+
+
+-- TASK 4.7
+
+SELECT AVG(age) AS average_age
+FROM (
+    SELECT TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) AS age
+    FROM Students
+) AS subquery;
+
+
+
+-- TASK 4.8
+
+
+SELECT *
+FROM Courses
+WHERE course_id NOT IN (
+    SELECT course_id
+    FROM Enrollments
+);
+
+
+
+-- TASK 4.9
+
+SELECT E.student_id, E.course_id,
+    (SELECT SUM(P.amount) 
+     FROM Payments as P 
+     WHERE P.student_id = E.student_id) AS total
+FROM Enrollments as E
+GROUP BY E.student_id, E.course_id;
+
+
+
+-- 4.10
+
+SELECT student_id
+FROM (
+    SELECT student_id, COUNT(*) AS payment_count
+    FROM payments
+    GROUP BY student_id
+) AS payment_counts
+WHERE payment_count > 1;
+
+
+
+-- 4.11
+
+SELECT S.student_id, S.first_name,S.last_name  ,
+SUM(P.amount) AS total
+FROM Students as S
+LEFT JOIN Payments as P ON S.student_id = P.student_id
+GROUP BY S.student_id, S.first_name;
+
+-- 4.12
+
+SELECT C.course_name,  COUNT(E.student_id) AS student_count
+FROM Courses as C
+LEFT JOIN Enrollments as E ON C.course_id = E.course_id
+GROUP BY C.course_name;
+
+-- 4.13
+
+SELECT S.student_id, S.first_name,  AVG(P.amount) AS average
+FROM Students as S
+LEFT JOIN Payments as P ON S.student_id = P.student_id
+GROUP BY S.student_id,  S.first_name;
